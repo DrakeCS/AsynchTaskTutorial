@@ -23,11 +23,14 @@ public class MainActivity extends Activity {
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
+		//Initialize our array of strings
 		mArray = new String[10];
 		for ( int i = 0; i< 10; i++){
             mArray[i] = "";
         }
-		PopulatePicture task = new PopulatePicture();
+		//Instantiate a new task
+		PopulateList task = new PopulateList();
+		//Pass in the URL where the data is located as a parameter. These parameters depend on your needs
 		task.execute(new String[] { "http://www.ethanclevenger.com/MirrorMe/tutorial.txt" });
 	}
 
@@ -38,11 +41,17 @@ public class MainActivity extends Activity {
 		return true;
 	}
 	
-	private class PopulatePicture extends AsyncTask<String, Void, Void> {  
+	private class PopulateList extends AsyncTask<String, Void, Void> {  
 		
-
-	    PopulatePicture() {
+		//Constructor
+	    PopulateList() {
 	    }
+	    
+	    /*The heavy lifting - the actual stuff you want happening off the main thread
+	     * You see that this returns void. If I didn't use a global variable
+	     * for the array I'll be using, it would need to be returned by this method.
+	     * Common practice calls this variable 'result'
+	     */
 		 @Override
 		    protected Void doInBackground(String... urls) {
 		      String text;
@@ -53,14 +62,12 @@ public class MainActivity extends Activity {
 		        
 		        try {
 		          HttpResponse execute = client.execute(httpGet);
-		          Log.v("log", "this far");
 		          InputStream content = execute.getEntity().getContent();
 		          BufferedReader buffer = new BufferedReader(new InputStreamReader(content));
 		          
 		          for(int i = 0; i<10; i++)
 		          {
 		        	  text = buffer.readLine();
-		        	  Log.v("log", text);
 		              mArray[i] = text;
 		              
 		          }
@@ -72,11 +79,24 @@ public class MainActivity extends Activity {
 			return null;
 		    }
 
+		 /*
+		  * This method is called after the above is finished. It usually receieves
+		  * the 'result' from the above method instead of Void. It can perform whatever you need.
+		  */
 		 @Override
 		    protected void onPostExecute(Void v) {
 		    	ListView mList = (ListView) findViewById(R.id.listView1);
-		    	ArrayAdapter<String> adapt = new ArrayAdapter<String>(MainActivity.this, R.layout.menu_item, mArray);
-		    	mList.setAdapter(adapt);
+		    	/*
+		    	 * Check for null! If your app has more than one screen, the user may have left the screen
+		    	 * containing the view you need before the task actually finished! If you aren't familiar
+		    	 * with ArrayAdapters, you can see another group's sample posted in Spring 2013 that covers
+		    	 * them
+		    	 */
+		    	if(mList != null)
+		    	{
+		    		ArrayAdapter<String> adapt = new ArrayAdapter<String>(MainActivity.this, R.layout.menu_item, mArray);
+			    	mList.setAdapter(adapt);
+		    	}
 		    }
 	 }
 
